@@ -22,12 +22,15 @@ still needed before schema changes are managed in production.
 1. In Render, create a **Blueprint** from this GitHub repository and select the
    `v1` branch. Render reads [`render.yaml`](../render.yaml), creates the
    `travelforge-v1` web service, generates `APP_SECRET_KEY`, and prompts for
-   `GOOGLE_OAUTH_CLIENT_ID`.
+   `GOOGLE_OAUTH_CLIENT_ID` and `DATABASE_URL`. Supply a durable PostgreSQL
+   connection string before the service's first deploy.
 2. Wait for the first deployment, then copy the service URL from Render.
-3. Set `DATABASE_URL` in the Render service to a durable PostgreSQL connection
-   string. Production intentionally refuses to start without it; local SQLite
-   is not suitable for Render's ephemeral filesystem. This project does not
-   provision a database or select a paid database plan.
+3. Confirm `DATABASE_URL` is set in the Render service environment. Production
+   intentionally refuses to start without it; local SQLite is not suitable
+   for Render's ephemeral filesystem. This project does not provision a
+   database or select a paid database plan. Render's free PostgreSQL expires
+   after 30 days; see [Render's free instance limits](https://render.com/docs/free)
+   before storing data there long term.
 4. In Google Cloud Console, add that URL (for example
    `https://travelforge-v1.onrender.com`) to the OAuth web client's authorized
    JavaScript origins. No redirect URI is required.
