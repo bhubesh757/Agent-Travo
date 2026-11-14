@@ -14,14 +14,16 @@ The first frontend screen lives in `frontend/src/App.tsx` and `frontend/src/styl
 - A trip form for destination, dates, traveler count, budget, and optional preferences.
 - Destination inspiration cards with illustrative starting prices.
 - A responsive layout for desktop, tablet, and narrow mobile screens.
-- A submit acknowledgement that is explicitly local UI state. It does not call an API.
+- A Google sign-in screen and session state backed by an HttpOnly cookie.
+- An authenticated trip form that validates dates, saves a trip, requests a planning preview, and refreshes saved journeys.
+- Trip loading, submission, planning, and API error states, plus an interactive saved-trip list.
 - A sign-in screen (`frontend/src/auth/`). The planning screen renders only for a signed-in traveler, and the sidebar shows their Google name, email, and photo with a sign-out button.
 
-The backend implements Sign in with Google: it verifies Google ID tokens, issues an HttpOnly session cookie, and exposes a `CurrentUser` dependency for protecting routes. See [AUTHENTICATION.md](AUTHENTICATION.md). Users are not persisted yet. Beyond that and a health check, the backend and agent tree is a set of named extension points only; no trip persistence, agents, or booking is implemented. The UI sample values and destination prices must not be represented as live inventory or quotes.
+The backend implements Sign in with Google: it verifies Google ID tokens, issues an HttpOnly session cookie, and exposes a `CurrentUser` dependency for protecting routes. See [AUTHENTICATION.md](AUTHENTICATION.md). It persists user profiles and trips, scopes each trip query to the signed-in Google subject, and provides a deterministic planning preview plus version-checked approve/reject decisions. The preview contains no live travel results and does not trigger a booking. The UI's inspiration-card prices are illustrative and must not be represented as live inventory or quotes.
 
 ## UI structure and logic
 
-`main.tsx` wraps the app in `AuthProvider` and renders `SignIn` until a session exists. `App` is currently a single-page React component to keep the initial screen easy to iterate on. `useState` owns the form acknowledgement and mobile menu state. A normal HTML form submit is intercepted, then changes the button and displays a status message. Inputs use native controls for keyboard and browser accessibility. The request form is laid out with CSS Grid; breakpoints collapse the grid and navigation for mobile.
+`main.tsx` wraps the app in `AuthProvider` and renders `SignIn` until a session exists. `App` loads the signed-in user's trips, submits validated form data, starts a mock planning preview, and refreshes the selected trip. `frontend/src/api/trips.ts` is the typed HTTP boundary. React state represents loading, saved, planning, and error states. Inputs use native controls for keyboard and browser accessibility. The request form is laid out with CSS Grid; breakpoints collapse the grid and navigation for mobile.
 
 Visual direction: calm, editorial travel planning rather than a dense booking search page. A restrained green palette signals planning and trust; warm accent colors and destination photography add travel character. Typography separates an expressive headline from compact utility labels. Cards, clear labels, visible budget/date fields, and a persistent approval assurance make the task legible.
 
@@ -31,12 +33,12 @@ The destination images currently use Unsplash image URLs as visual placeholders.
 
 1. **Frontend (`frontend/`)**: collect trip constraints, show workflow status, render a proposal and its estimate provenance, and capture an explicit approval decision.
 2. **API (`backend/app/api/`)**: validate requests and return typed responses. Route handlers should call services and should not own workflow or persistence logic.
-3. **Services and repositories**: hold application operations and database access separately from HTTP concerns.
+3. **Services and repositories**: `backend/app/services/trips.py` owns trip/proposal operations, while route handlers in `backend/app/api/routes/` handle HTTP concerns. SQLAlchemy sessions and records live in `backend/app/db/` and `backend/app/models/`.
 4. **Workflow (`backend/app/agents/`, `backend/app/graph/`)**: coordinate bounded research/planning agents; use a shared typed state and deterministic mock tools first.
 5. **Guardrails and approval**: enforce schemas, tool permissions, budget checks, ownership, and approval against an immutable proposal version/hash on the server.
 6. **Providers**: isolate travel data and booking calls behind interfaces; start with fixtures. Booking-write capability must remain unavailable to planning agents.
 
-The target flow is: validate request → gather options → assemble itinerary and estimated budget → validate proposal → persist version → pause for the user → verify exact approved version → (future phase) execute a mock booking and reconcile the result. Price/provider/date/traveler changes invalidate prior approval. The server is authoritative for each transition.
+The current flow is: validate request → persist trip → create a deterministic, illustrative day outline → persist the preview → record an approve/reject choice only for the current preview version. The future target flow adds provider research, budget checks, immutable proposal hashes, and a durable pause/resume workflow. No future booking can proceed based on this preview approval implementation.
 
 ## Engineering techniques
 
@@ -46,6 +48,8 @@ The target flow is: validate request → gather options → assemble itinerary a
 - Give each agent only the read or write tools required for its job. Validate tool arguments and outputs, bound timeouts/retries, and treat provider text as untrusted input.
 - Persist workflow transitions and approval audit details. Use idempotency keys for eventual booking writes; do not blindly retry uncertain non-idempotent operations.
 - Keep proposal review and approval tied to a persisted immutable snapshot. Revalidate provider state when possible and require fresh approval after material changes.
+- The current SQLAlchemy models use `Base.metadata.create_all()` at API startup. This is not a schema migration strategy; use Alembic before production schema evolution.
+- SQLite is the local default. The API accepts a PostgreSQL `DATABASE_URL`, but hosted persistence requires a configured durable PostgreSQL service.
 - Keep the interface progressively usable: semantic form controls, visible labels, keyboard focus, and narrow-screen layouts.
 
 ## Reference websites
@@ -68,6 +72,6 @@ These references explain the implementation techniques or establish the security
 | [Sign in with Google for Web](https://developers.google.com/identity/gsi/web/guides/overview) | Google button, ID token flow, and server-side token verification. |
 | [Unsplash License](https://unsplash.com/license) | Check image rights and permitted use before shipping the current visual placeholders. |
 
-## Next UI/data connection
+## Next backend and UI steps
 
-Replace the local submit handler with a typed `POST /api/v1/trips` request only after that endpoint exists. Protect that endpoint with `CurrentUser` and store the trip under `user.id`. Show loading, validation, and network error states; then route to a persisted trip status view. Replace illustrative destination prices with clearly sourced estimates from provider/tool responses. The backend must ask for essential missing dates rather than invent them.
+Add migrations and configure durable PostgreSQL for the hosted service. Replace the mock planning service with bounded research providers and an agent graph, keeping all output labeled with source and freshness. Add proposal version/hash records and an approval audit trail before any booking tool is introduced. Replace illustrative destination prices with clearly sourced estimates. The backend must ask for essential missing dates rather than invent them.

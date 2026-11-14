@@ -12,4 +12,4 @@ This folder is the working record for how TravelForge is built. Start here when 
 
 ## Current state
 
-The React frontend is the first working surface, and it is gated behind Sign in with Google. The backend verifies the Google sign-in and issues a session cookie; that is its only working feature besides the health check. The trip form is a front-end demonstration only. No trip is saved, no live travel data is fetched, and no agent or booking action runs yet. Data, workflow, and provider directories are scaffolds for subsequent implementation.
+The React frontend is gated behind Sign in with Google and uses the authenticated API for saved trips and a deterministic planning preview. The backend persists users and trips, enforces per-user access, and records preview decisions tied to a proposal version. The preview is mock content, no live travel data is fetched, and no agent or booking action runs yet. SQLite is the local default; hosted use needs `DATABASE_URL` set to durable PostgreSQL. Database tables are currently initialized with `create_all`; migrations remain future work.

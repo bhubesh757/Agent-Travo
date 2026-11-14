@@ -1,18 +1,21 @@
 # Implementation plan
 
-## Current phase: UI first, other areas skeleton only
+## Current phase: authenticated trip flow and mock proposal
 
 - [x] Inspect repository and product specification.
 - [x] Create responsive React + TypeScript trip planning screen.
-- [x] Add UI interaction skeleton and clearly label demo-only behavior.
-- [x] Add FastAPI health-check skeleton and backend extension points.
+- [x] Connect the trip form to an authenticated API with validation and loading/error states.
+- [x] Add SQLAlchemy persistence for users and trips with SQLite development default and PostgreSQL support.
+- [x] Add owner-scoped trip create/list/detail API routes.
+- [x] Add a deterministic planning preview clearly labeled as illustrative, not live data.
+- [x] Add version-checked approve/reject decisions for the preview.
 - [x] Document design choices, intended logic, source websites, and limitations.
 - [x] Add Sign in with Google: backend token verification, session cookie, protected-route dependency, and gated frontend.
-- [ ] Persist users in a `users` table and add server-side session revocation.
-- [ ] Connect trip form to validated API and persistent trip records.
-- [ ] Implement agent graph and deterministic mock research providers.
-- [ ] Implement proposal review, approval persistence, and booking simulation in later phases.
+- [ ] Add Alembic migrations and provision durable PostgreSQL for hosted data.
+- [ ] Implement agent graph and deterministic mock travel research providers.
+- [ ] Store immutable proposal versions/hashes and a full approval audit record.
+- [ ] Implement booking simulation with server-side authorization and idempotency.
 
 ## Phase boundaries
 
-UI work can proceed independently against a documented API contract. Do not represent agent planning or booking as active until the relevant backend phases exist. Real provider integrations remain out of scope until provider access and terms are reviewed.
+The trip form, saved journeys, and planning preview use the backend. The current preview is deterministic placeholder content, not agent output or live travel data. No provider search, booking, or cancellation is implemented. The API creates missing tables at startup; this is a development convenience until migrations are added. Real provider integrations remain out of scope until provider access and terms are reviewed.

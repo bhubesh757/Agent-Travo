@@ -105,3 +105,15 @@ def test_secure_cookie_in_production(client):
     app.dependency_overrides[get_settings] = lambda: make_settings(app_env="production")
     response = client.post("/api/v1/auth/google", json={"credential": "token"}, headers={"Origin": ORIGIN})
     assert "Secure" in response.headers["set-cookie"]
+
+
+def test_render_external_url_is_trusted_in_production(monkeypatch):
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("APP_SECRET_KEY", SECRET)
+    monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://travelforge.onrender.com/")
+    monkeypatch.delenv("FRONTEND_ORIGIN", raising=False)
+    get_settings.cache_clear()
+    try:
+        assert get_settings().frontend_origins == ("https://travelforge.onrender.com",)
+    finally:
+        get_settings.cache_clear()
