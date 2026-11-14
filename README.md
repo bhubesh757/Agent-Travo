@@ -457,6 +457,14 @@ Example approval decision:
 }
 ```
 
+Authentication endpoints (implemented; see `docs/AUTHENTICATION.md`):
+
+-   `GET /auth/config` --- public sign-in settings.
+-   `POST /auth/google` --- verify a Google ID token and start a session
+    cookie.
+-   `GET /auth/me` --- the signed-in user.
+-   `POST /auth/logout` --- end the session.
+
 The server must compare the submitted proposal identity and hash with
 the persisted proposal and authenticated user. Never accept a
 client-supplied hash as proof by itself.
@@ -699,6 +707,7 @@ APP_SECRET_KEY=replace-with-a-long-random-secret
 DATABASE_URL=postgresql+psycopg://travel_user:travel_password@localhost:5432/travelforge
 LANGGRAPH_CHECKPOINT_DATABASE_URL=postgresql://travel_user:travel_password@localhost:5432/travelforge
 GOOGLE_API_KEY=
+GOOGLE_OAUTH_CLIENT_ID=
 GEMINI_MODEL=
 TRAVEL_PROVIDER_MODE=mock
 FRONTEND_ORIGIN=http://localhost:5173

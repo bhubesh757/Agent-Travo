@@ -43,6 +43,37 @@ PATH="/Users/bhubeshsr/.nvm/versions/node/v24.21.0/bin:$PATH" npm run dev -- --h
 
 The Codex execution environment denied opening a local listening socket (`EPERM`), so the server could not be started from that shell. The user later confirmed the app was available at `http://127.0.0.1:5173/#home`.
 
+## Backend setup
+
+Python 3.11 or newer is required. The backend uses its own virtual environment:
+
+```sh
+cd backend
+python3.12 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
+cp .env.example .env
+```
+
+Then fill in `GOOGLE_OAUTH_CLIENT_ID` and `APP_SECRET_KEY` in `backend/.env`. See [AUTHENTICATION.md](AUTHENTICATION.md).
+
+## Run the backend
+
+```sh
+cd backend
+.venv/bin/uvicorn app.main:app --env-file .env --host 127.0.0.1 --port 8000 --reload --reload-dir app
+```
+
+The API is at `http://127.0.0.1:8000` and its interactive docs are at `http://127.0.0.1:8000/docs`. Restart the server after editing `.env`; `--reload` only watches code.
+
+The frontend dev server forwards `/api` requests to this address, so run both to sign in.
+
+## Run backend tests
+
+```sh
+cd backend
+.venv/bin/python -m pytest -q tests
+```
+
 ## Git initialization and commit
 
 The project directory did not have a Git repository when work began. These are the commands to initialize and commit it in an environment that allows writing Git metadata:

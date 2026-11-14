@@ -15,12 +15,13 @@ The first frontend screen lives in `frontend/src/App.tsx` and `frontend/src/styl
 - Destination inspiration cards with illustrative starting prices.
 - A responsive layout for desktop, tablet, and narrow mobile screens.
 - A submit acknowledgement that is explicitly local UI state. It does not call an API.
+- A sign-in screen (`frontend/src/auth/`). The planning screen renders only for a signed-in traveler, and the sidebar shows their Google name, email, and photo with a sign-out button.
 
-The backend and agent tree is a set of named extension points only. `backend/app/main.py` currently offers a health check; no trip persistence, authentication, agents, or booking is implemented. The UI sample values and destination prices must not be represented as live inventory or quotes.
+The backend implements Sign in with Google: it verifies Google ID tokens, issues an HttpOnly session cookie, and exposes a `CurrentUser` dependency for protecting routes. See [AUTHENTICATION.md](AUTHENTICATION.md). Users are not persisted yet. Beyond that and a health check, the backend and agent tree is a set of named extension points only; no trip persistence, agents, or booking is implemented. The UI sample values and destination prices must not be represented as live inventory or quotes.
 
 ## UI structure and logic
 
-`App` is currently a single-page React component to keep the initial screen easy to iterate on. `useState` owns the form acknowledgement and mobile menu state. A normal HTML form submit is intercepted, then changes the button and displays a status message. Inputs use native controls for keyboard and browser accessibility. The request form is laid out with CSS Grid; breakpoints collapse the grid and navigation for mobile.
+`main.tsx` wraps the app in `AuthProvider` and renders `SignIn` until a session exists. `App` is currently a single-page React component to keep the initial screen easy to iterate on. `useState` owns the form acknowledgement and mobile menu state. A normal HTML form submit is intercepted, then changes the button and displays a status message. Inputs use native controls for keyboard and browser accessibility. The request form is laid out with CSS Grid; breakpoints collapse the grid and navigation for mobile.
 
 Visual direction: calm, editorial travel planning rather than a dense booking search page. A restrained green palette signals planning and trust; warm accent colors and destination photography add travel character. Typography separates an expressive headline from compact utility labels. Cards, clear labels, visible budget/date fields, and a persistent approval assurance make the task legible.
 
@@ -64,8 +65,9 @@ These references explain the implementation techniques or establish the security
 | [LangGraph documentation](https://docs.langchain.com/oss/python/langgraph/overview) | Planned stateful workflow orchestration and pause/resume. |
 | [PostgreSQL documentation](https://www.postgresql.org/docs/current/) | Planned durable relational storage and transaction boundaries. |
 | [OWASP Top 10](https://owasp.org/www-project-top-ten/) | Security review baseline for the eventual web application and API. |
+| [Sign in with Google for Web](https://developers.google.com/identity/gsi/web/guides/overview) | Google button, ID token flow, and server-side token verification. |
 | [Unsplash License](https://unsplash.com/license) | Check image rights and permitted use before shipping the current visual placeholders. |
 
 ## Next UI/data connection
 
-Replace the local submit handler with a typed `POST /api/v1/trips` request only after that endpoint exists. Show loading, validation, and network error states; then route to a persisted trip status view. Replace illustrative destination prices with clearly sourced estimates from provider/tool responses. The backend must ask for essential missing dates rather than invent them.
+Replace the local submit handler with a typed `POST /api/v1/trips` request only after that endpoint exists. Protect that endpoint with `CurrentUser` and store the trip under `user.id`. Show loading, validation, and network error states; then route to a persisted trip status view. Replace illustrative destination prices with clearly sourced estimates from provider/tool responses. The backend must ask for essential missing dates rather than invent them.
