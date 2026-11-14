@@ -38,8 +38,8 @@ secret, but the backend session signing key must remain private.
 The GitHub Actions workflow at [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
 runs on pull requests and pushes to `main` or `v1`, and on `1.*` version tags.
 It installs backend and frontend dependencies, builds the frontend, and runs
-the backend tests. The Render Blueprint is configured with `autoDeploy:
-afterCI` on `v1`, so Render deploys a new `v1` commit after its GitHub checks
+the backend tests. The Render Blueprint is configured with `autoDeployTrigger:
+checksPass` on `v1`, so Render deploys a new `v1` commit after its GitHub checks
 pass.
 
 The initial Render Blueprint deployment is a one-time manual setup. Subsequent
