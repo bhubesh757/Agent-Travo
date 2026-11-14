@@ -42,11 +42,23 @@ def _load_secret_key(app_env: str) -> str:
 @lru_cache
 def get_settings() -> Settings:
     app_env = os.environ.get("APP_ENV", "development").strip().lower()
-    origins = os.environ.get("FRONTEND_ORIGIN", "").strip() or DEFAULT_FRONTEND_ORIGINS
+    configured_origins = os.environ.get("FRONTEND_ORIGIN", "").strip()
+    render_external_url = os.environ.get("RENDER_EXTERNAL_URL", "").strip().rstrip("/")
+    if configured_origins:
+        origins = [origin.strip().rstrip("/") for origin in configured_origins.split(",") if origin.strip()]
+    elif render_external_url:
+        origins = [render_external_url]
+    elif app_env == "production":
+        origins = []
+    else:
+        origins = [origin.strip() for origin in DEFAULT_FRONTEND_ORIGINS.split(",")]
+    if render_external_url and render_external_url not in origins:
+        origins.append(render_external_url)
+
     return Settings(
         app_env=app_env,
         secret_key=_load_secret_key(app_env),
         google_client_id=os.environ.get("GOOGLE_OAUTH_CLIENT_ID", "").strip(),
-        frontend_origins=tuple(o.strip().rstrip("/") for o in origins.split(",") if o.strip()),
+        frontend_origins=tuple(origins),
         session_ttl_seconds=int(os.environ.get("SESSION_TTL_SECONDS", str(7 * 24 * 60 * 60))),
     )

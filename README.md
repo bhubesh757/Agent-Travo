@@ -11,6 +11,9 @@
 **Build strategy:** MVP first, production capabilities added
 incrementally.
 
+-   CI and v1 deployment instructions: see
+    [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). GitHub Actions runs checks;
+    Render hosts the frontend and API on one origin.
 -   LLM: Google Gemini API (provider abstraction recommended)
 -   Agent orchestration: LangGraph Supervisor
 -   Backend: Python + FastAPI
